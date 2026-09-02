@@ -8,6 +8,8 @@ A tiny macOS menu-bar app that fixes the parts of your mouse macOS won't:
 
 Menu-bar only (no Dock icon). One `CGEventTap`, no dependencies, no Xcode project — just the Command Line Tools.
 
+**Website:** https://donistyping.github.io/pointer/
+
 ## Install (build from source — recommended)
 
 Requirements: macOS 13+ and Apple's Command Line Tools (`xcode-select --install`).

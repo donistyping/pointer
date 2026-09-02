@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pointer — smooth scrolling &amp; mouse button remapping for Mac</title>
+<meta name="description" content="A tiny, open-source menu-bar utility for macOS: reverse the mouse wheel without touching your trackpad, smooth out notchy scrolling, and remap the extra buttons. No telemetry, 488 KB.">
+<link rel="canonical" href="https://donistyping.github.io/pointer/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://donistyping.github.io/pointer/">
+<meta property="og:title" content="Pointer — smooth scrolling & mouse button remapping for Mac">
+<meta property="og:description" content="Tiny, open source, no telemetry. Reverse the wheel, smooth the notches, remap the buttons.">
+<meta property="og:image" content="https://donistyping.github.io/pointer/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#131316">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fragment+Mono&family=Schibsted+Grotesk:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #131316;
+  --bg-raised: #1a1a1f;
+  --bg-panel: #1e1e24;
+  --ink: #e9e9ec;
+  --ink-body: #bdbdc4;
+  --ink-soft: #8f8f98;
+  --dash: #b4b4b9;
+  --line: rgba(255, 255, 255, 0.09);
+  --line-dash: rgba(255, 255, 255, 0.17);
+  --capsule: #e9e9ec;
+  --capsule-ink: #131316;
+  --sans: "Schibsted Grotesk", system-ui, -apple-system, sans-serif;
+  --mono: "Fragment Mono", ui-monospace, "SF Mono", monospace;
+  --ease-glide: cubic-bezier(0.16, 1, 0.3, 1);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink-body);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 clamp(1.25rem, 5vw, 3rem); }
+a { color: var(--ink); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
+h1, h2 { color: var(--ink); text-wrap: balance; letter-spacing: -0.02em; }
+::selection { background: #3a3a44; color: var(--ink); }
+
+/* ---------- hero ---------- */
+.hero { padding: clamp(4rem, 11vh, 7.5rem) 0 clamp(3rem, 7vh, 5rem); }
+.hero-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(1.75rem, 5vw, 3.5rem);
+  align-items: center;
+}
+.hero-icon { width: clamp(120px, 16vw, 168px); height: auto; display: block; }
+.hero h1 {
+  font-size: clamp(2.9rem, 8vw, 4.75rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  margin: 0 0 0.9rem;
+}
+.lede {
+  font-size: clamp(1.1rem, 2.4vw, 1.3rem);
+  line-height: 1.55;
+  max-width: 34em;
+  margin: 0 0 1.9rem;
+  text-wrap: pretty;
+}
+.actions { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
+.btn {
+  font: 600 1.02rem/1 var(--sans);
+  color: var(--capsule-ink);
+  background: var(--capsule);
+  border-radius: 999px;
+  padding: 0.95rem 1.6rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: transform 0.35s var(--ease-glide), background 0.2s ease;
+}
+.btn:hover { background: #ffffff; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn svg { width: 15px; height: 15px; }
+.alt-link { color: var(--ink-body); font-weight: 500; }
+.meta {
+  font: 400 0.78rem/1.6 var(--mono);
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  margin-top: 1.25rem;
+}
+.meta a { color: var(--ink-soft); }
+
+/* ---------- section scaffolding ---------- */
+section { padding: clamp(2.75rem, 7vh, 4.5rem) 0; border-top: 1px dashed var(--line-dash); }
+h2 { font-size: clamp(1.55rem, 3.5vw, 2rem); font-weight: 700; margin: 0 0 1rem; }
+.section-note { max-width: 40em; margin: 0 0 2.25rem; text-wrap: pretty; }
+
+/* ---------- scroll demo ---------- */
+.demo { display: flex; gap: clamp(1rem, 3vw, 2rem); flex-wrap: wrap; margin: 0; }
+.demo-panel { flex: 1 1 280px; min-width: 260px; }
+.demo-label {
+  font: 400 0.72rem/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 0.7rem 0.2rem;
+}
+.demo-label strong { color: var(--ink); font-weight: 400; }
+.demo-screen {
+  height: 250px;
+  background: var(--bg-raised);
+  border: 1px dashed var(--line-dash);
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.demo-viewport {
+  position: absolute;
+  inset: 1.4rem 1.6rem;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(transparent, #000 14%, #000 86%, transparent);
+}
+.feed { animation: notches 6.4s infinite; }
+.feed-smooth { animation-timing-function: var(--ease-glide); }
+.feed-steps { animation-timing-function: steps(1, jump-start); }
+/* eight equal "wheel clicks" per loop; the timing function is the whole story */
+@keyframes notches {
+  0%    { transform: translateY(0); }
+  12.5% { transform: translateY(-6.25%); }
+  25%   { transform: translateY(-12.5%); }
+  37.5% { transform: translateY(-18.75%); }
+  50%   { transform: translateY(-25%); }
+  62.5% { transform: translateY(-31.25%); }
+  75%   { transform: translateY(-37.5%); }
+  87.5% { transform: translateY(-43.75%); }
+  100%  { transform: translateY(-50%); }
+}
+.bar {
+  height: 9px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.13);
+  margin-bottom: 11px;
+}
+.bar.p { margin-bottom: 26px; }
+.demo-caption {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  margin-top: 1.5rem;
+  max-width: 40em;
+  text-wrap: pretty;
+}
+.reduced-note { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .feed { animation: none; }
+  .btn { transition: none; }
+  .reduced-note { display: inline; }
+}
+
+/* ---------- capabilities ---------- */
+.cap { display: grid; grid-template-columns: 44px 200px 1fr; gap: 1.5rem; padding: 1.6rem 0; border-top: 1px dashed var(--line-dash); align-items: start; }
+.cap:first-of-type { border-top: none; padding-top: 0.4rem; }
+.cap h3 { font-size: 1.08rem; font-weight: 700; color: var(--ink); margin: 0.1rem 0 0; letter-spacing: -0.01em; }
+.cap p { margin: 0; max-width: 36em; text-wrap: pretty; }
+.cap svg { width: 40px; height: 40px; display: block; margin-top: 0.1rem; }
+.glyph { stroke: var(--dash); stroke-width: 2; fill: none; stroke-linecap: round; }
+.glyph-dash { stroke-dasharray: 5 6; }
+
+/* ---------- permission / promises ---------- */
+.promises { list-style: none; margin: 1.75rem 0 0; padding: 0; max-width: 42em; }
+.promises li { padding: 0.85rem 0 0.85rem 1.9rem; position: relative; border-top: 1px dashed var(--line-dash); }
+.promises li:first-child { border-top: none; padding-top: 0; }
+.promises li::before {
+  content: "";
+  position: absolute;
+  left: 0.2rem;
+  top: 1.35rem;
+  width: 7px; height: 15px;
+  border-radius: 4px;
+  background: var(--dash);
+}
+.promises li:first-child::before { top: 0.5rem; }
+.promises strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- first open ---------- */
+.steps { counter-reset: step; list-style: none; margin: 0; padding: 0; max-width: 42em; }
+.steps li { counter-increment: step; padding: 1rem 0 1rem 3rem; position: relative; }
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0; top: 0.95rem;
+  width: 30px; height: 30px;
+  border: 1px dashed var(--line-dash);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 400 0.8rem/1 var(--mono);
+  color: var(--ink);
+}
+code {
+  font: 400 0.86em var(--mono);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.15em 0.45em;
+  color: var(--ink);
+}
+pre {
+  background: var(--bg-raised);
+  border: 1px dashed var(--line-dash);
+  border-radius: 12px;
+  padding: 1.2rem 1.4rem;
+  overflow-x: auto;
+  margin: 1.5rem 0 0;
+  max-width: 46em;
+}
+pre code { background: none; border: none; padding: 0; font-size: 0.88rem; line-height: 1.7; color: var(--ink-body); }
+pre .c { color: var(--ink-soft); }
+
+/* ---------- footer ---------- */
+footer { border-top: 1px dashed var(--line-dash); padding: 2.5rem 0 4rem; }
+.foot { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; font-size: 0.92rem; color: var(--ink-soft); }
+.foot a { color: var(--ink-body); }
+
+@media (max-width: 700px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 1.75rem; }
+  .cap { grid-template-columns: 40px 1fr; }
+  .cap p { grid-column: 2; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero wrap">
+  <div class="hero-grid">
+    <svg class="hero-icon" viewBox="0 0 1024 1024" role="img" aria-label="The Pointer app icon: a mouse drawn in dashed strokes on a graphite tile">
+      <defs>
+        <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#38383c"/><stop offset="1" stop-color="#1f1f23"/>
+        </linearGradient>
+      </defs>
+      <rect x="100" y="100" width="824" height="824" rx="184" fill="url(#tile)" stroke="rgba(255,255,255,0.10)" stroke-width="2"/>
+      <ellipse cx="512" cy="512" rx="165" ry="247" fill="none" stroke="#b4b4b9" stroke-width="20"
+               stroke-linecap="round" stroke-dasharray="41 50"/>
+      <rect x="488" y="354" width="48" height="128" rx="24" fill="#c6c6cb"/>
+    </svg>
+    <div>
+      <h1>Pointer</h1>
+      <p class="lede">A tiny menu-bar utility that fixes what macOS won't: flip your mouse wheel without touching the trackpad, turn notchy scrolling into a glide, and put the extra buttons to work.</p>
+      <div class="actions">
+        <a class="btn" href="https://github.com/donistyping/pointer/releases/download/v1.0.0/Pointer-1.0.0.zip">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1v9.3L4.7 7 3.3 8.4 8 13l4.7-4.6L11.3 7 9 10.3V1H8zm-5 13h10v1.5H3z"/></svg>
+          Download Pointer
+        </a>
+        <a class="alt-link" href="https://github.com/donistyping/pointer">View the source →</a>
+      </div>
+      <p class="meta">v1.0.0 · 488 KB · macOS 13 or later · Apple Silicon + Intel · <a href="https://github.com/donistyping/pointer/releases">all releases</a></p>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="wrap" aria-labelledby="demo-h">
+    <h2 id="demo-h">Same wheel, different physics</h2>
+    <p class="section-note">Both panels below are fed the same eight wheel clicks. The only difference is what a click <em>does</em> — which is exactly what Pointer changes.<span class="reduced-note"> (Animation paused for reduced motion: the left panel jumps a fixed chunk per click; the right one glides the same distance and settles.)</span></p>
+    <figure class="demo">
+      <div class="demo-panel">
+        <p class="demo-label">Without Pointer</p>
+        <div class="demo-screen"><div class="demo-viewport">
+          <div class="feed feed-steps" aria-hidden="true">
+            <div class="bar" style="width:78%"></div><div class="bar" style="width:92%"></div><div class="bar" style="width:64%"></div><div class="bar p" style="width:85%"></div>
+            <div class="bar" style="width:88%"></div><div class="bar" style="width:71%"></div><div class="bar p" style="width:56%"></div>
+            <div class="bar" style="width:82%"></div><div class="bar" style="width:95%"></div><div class="bar" style="width:60%"></div><div class="bar p" style="width:74%"></div>
+            <div class="bar" style="width:90%"></div><div class="bar" style="width:67%"></div><div class="bar p" style="width:81%"></div>
+            <div class="bar" style="width:78%"></div><div class="bar" style="width:92%"></div><div class="bar" style="width:64%"></div><div class="bar p" style="width:85%"></div>
+            <div class="bar" style="width:88%"></div><div class="bar" style="width:71%"></div><div class="bar p" style="width:56%"></div>
+            <div class="bar" style="width:82%"></div><div class="bar" style="width:95%"></div><div class="bar" style="width:60%"></div><div class="bar p" style="width:74%"></div>
+            <div class="bar" style="width:90%"></div><div class="bar" style="width:67%"></div><div class="bar p" style="width:81%"></div>
+          </div>
+        </div></div>
+      </div>
+      <div class="demo-panel">
+        <p class="demo-label"><strong>With Pointer</strong></p>
+        <div class="demo-screen"><div class="demo-viewport">
+          <div class="feed feed-smooth" aria-hidden="true">
+            <div class="bar" style="width:78%"></div><div class="bar" style="width:92%"></div><div class="bar" style="width:64%"></div><div class="bar p" style="width:85%"></div>
+            <div class="bar" style="width:88%"></div><div class="bar" style="width:71%"></div><div class="bar p" style="width:56%"></div>
+            <div class="bar" style="width:82%"></div><div class="bar" style="width:95%"></div><div class="bar" style="width:60%"></div><div class="bar p" style="width:74%"></div>
+            <div class="bar" style="width:90%"></div><div class="bar" style="width:67%"></div><div class="bar p" style="width:81%"></div>
+            <div class="bar" style="width:78%"></div><div class="bar" style="width:92%"></div><div class="bar" style="width:64%"></div><div class="bar p" style="width:85%"></div>
+            <div class="bar" style="width:88%"></div><div class="bar" style="width:71%"></div><div class="bar p" style="width:56%"></div>
+            <div class="bar" style="width:82%"></div><div class="bar" style="width:95%"></div><div class="bar" style="width:60%"></div><div class="bar p" style="width:74%"></div>
+            <div class="bar" style="width:90%"></div><div class="bar" style="width:67%"></div><div class="bar p" style="width:81%"></div>
+          </div>
+        </div></div>
+      </div>
+      <figcaption class="demo-caption">Speed and glide are sliders in Pointer's settings — from a snap that just keeps up, to a long float. Your trackpad is left completely alone.</figcaption>
+    </figure>
+  </section>
+
+  <section class="wrap" aria-labelledby="caps-h">
+    <h2 id="caps-h">Three fixes, nothing else</h2>
+    <div class="cap">
+      <svg viewBox="0 0 40 40" aria-hidden="true" class="glyph">
+        <path d="M13 30V12m0 0l-5 5m5-5l5 5" />
+        <path d="M27 10v18m0 0l-5-5m5 5l5-5" class="glyph-dash"/>
+      </svg>
+      <h3>Reverse the wheel</h3>
+      <p>macOS ties the mouse and trackpad to one "natural scrolling" switch. Pointer flips only the wheel, so the trackpad keeps behaving like a trackpad.</p>
+    </div>
+    <div class="cap">
+      <svg viewBox="0 0 40 40" aria-hidden="true" class="glyph">
+        <path d="M5 28h6v-7h6v-7h6" />
+        <path d="M9 32c10 0 8-18 22-20" class="glyph-dash"/>
+      </svg>
+      <h3>Smooth the notches</h3>
+      <p>Each click of the wheel becomes an eased glide instead of a jump — the same easing you see in the demo above, tuned with two sliders.</p>
+    </div>
+    <div class="cap">
+      <svg viewBox="0 0 40 40" aria-hidden="true" class="glyph">
+        <ellipse cx="18" cy="20" rx="9" ry="13" class="glyph-dash"/>
+        <path d="M18 12v6" stroke-width="4"/>
+        <path d="M31 14h4m-4 6h6m-6 6h4" />
+      </svg>
+      <h3>Remap the buttons</h3>
+      <p>Middle-click, the side buttons, even the wheel-click: send them to Mission Control, Spaces, Back/Forward, or Launchpad. A Detect button binds whatever your mouse reports.</p>
+    </div>
+  </section>
+
+  <section class="wrap" aria-labelledby="perm-h">
+    <h2 id="perm-h">It asks for one permission — here's the honest why</h2>
+    <p class="section-note">Reshaping scroll and click events is precisely the thing macOS gates behind <strong>Accessibility</strong> access, so Pointer can't work without it. Software that can watch your input deserves suspicion, so the whole case for trust is verifiable:</p>
+    <ul class="promises">
+      <li><strong>Zero network requests.</strong> Pointer has no networking code at all — no telemetry, no update phone-home, nothing to send your input to.</li>
+      <li><strong>Small enough to actually read.</strong> The entire app is a few hundred lines of Swift, <a href="https://github.com/donistyping/pointer">MIT-licensed on GitHub</a>. The download is 488 KB.</li>
+      <li><strong>Easy to walk away from.</strong> Quit it from the menu bar and it's inert. Uninstall is the app, one launch agent, and one settings file — documented in the README.</li>
+    </ul>
+  </section>
+
+  <section class="wrap" aria-labelledby="open-h">
+    <h2 id="open-h">First open, two honest steps</h2>
+    <p class="section-note">Pointer isn't notarized by Apple — that's a $99/year developer subscription this free app doesn't have. macOS will make you vouch for it once:</p>
+    <ol class="steps">
+      <li><strong>Open it deliberately.</strong> On macOS 13–14: right-click <code>Pointer.app</code> and choose <em>Open</em>. On macOS 15 and later: open <em>System Settings → Privacy&nbsp;&amp;&nbsp;Security</em> and click <em>Open&nbsp;Anyway</em>.</li>
+      <li><strong>Grant Accessibility</strong> when it asks. Pointer activates on its own within a couple of seconds — no relaunch, and the menu-bar mouse turns "active."</li>
+    </ol>
+  </section>
+
+  <section class="wrap" aria-labelledby="src-h">
+    <h2 id="src-h">Or build it yourself</h2>
+    <p class="section-note">Building from source skips the Gatekeeper step entirely — locally built apps are never quarantined. All it needs is Apple's Command Line Tools.</p>
+    <pre><code><span class="c"># compiles universal, installs to /Applications, starts at login</span>
+git clone https://github.com/donistyping/pointer
+cd pointer &amp;&amp; ./build.sh install</code></pre>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div class="foot">
+    <span>MIT licensed · <a href="https://github.com/donistyping/pointer">GitHub</a> · <a href="https://github.com/donistyping/pointer/issues">report an issue</a></span>
+    <span>made by <a href="https://donistyping.xyz">Don Adams</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
